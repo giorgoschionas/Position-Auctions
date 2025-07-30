@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+
+
 import math
 import random
 
@@ -25,35 +27,11 @@ def create_transactions(num_transactions, num_positions):
         transactions.append(Transaction(id=i, size=size, vals=vals))
     return transactions
 
-# Create a new list of tuples (density, transaction_index, position_index) - not very Pythonic
-densities_with_id_pos = []
-
-for idx, transaction in enumerate(create_transactions(num_txs, num_positions)):
-    for pos, density in enumerate(transaction.densities):
-        densities_with_id_pos.append((density, idx, pos))
-
-# Sort the list by density (descending order)
-densities_with_id_pos.sort(key=lambda x: x[0], reverse=True)
-
-# To show the result
-for density, owner_idx, pos in densities_with_id_pos:
-    print(f"Density: {density}, belongs to transaction index: {owner_idx}, position index: {pos}")
 
 
-# Our greedy matching algorithm - NEEDS to be checked!
-def greedy_budgeted_matching(transactions, densities_with_id_pos, knapsack_size):
-    used_budget = 0
-    greedy_matching = set()
-    used_transactions = set()
 
-    for density, transaction_idx, position_idx in densities_with_id_pos:
-        if used_budget + transactions[transaction_idx].size <= knapsack_size and transaction_idx not in used_transactions:
-            greedy_matching.add((transaction_idx, position_idx))
-            used_budget += transactions[transaction_idx].size
-            used_transactions.add(transaction_idx)
 
-    print("value of budgeted greedy matching: ", sum(transactions[idx].vals[pos] for idx, pos in greedy_matching))
-    return greedy_matching
+
 
 
 
