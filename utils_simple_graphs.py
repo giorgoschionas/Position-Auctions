@@ -1,10 +1,8 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-import math
-import random
-from itertools import chain, combinations
-from sortedcontainers import SortedList, SortedSet, SortedDict
+import scipy.stats as stats
+
 
 def draw_bipartite_graph(G, U, V):
     # Compute a bipartite layout
@@ -30,23 +28,16 @@ def draw_bipartite_graph(G, U, V):
     plt.savefig("bipartite_graph.png")
     # plt.show()
 
-def generate_valuations(rows, cols, low, high):
-    """
-    Generates a matrix of a given size with elements drawn from a uniform distribution.
-    
-    Args:
-        rows (int): The number of transactions (rows).
-        cols (int): The number of positions (columns).
-        low (float): The lower bound of the distribution.
-        high (float): The upper bound of the distribution.
+def generate_valuations(val_dist, rows, cols):
+    """ Generate a 2D array of valuations based on a given distribution.
         
     Returns:
         numpy.ndarray: A 2D array of shape (rows, cols).
     """
-    return np.random.uniform(low=low, high=high, size=(rows, cols))
+    return val_dist.rvs(size=(rows, cols))
 
 
-def create_bipartite_graph(valuations, budgeted=False):
+def create_bipartite_graph(valuations, costs=None, budgeted=False):
     G = nx.Graph()
     U = ["left " + str(i+1) for i in range(valuations.shape[0])]  # “left” side (bidders)
     V = ["right " + str(i+1) for i in range(valuations.shape[1])]  # “right” side (positions)    
@@ -56,19 +47,14 @@ def create_bipartite_graph(valuations, budgeted=False):
     G.add_nodes_from(V, bipartite=1)
 
     # add edges 
-    for i in range(valuations.shape[0]): 
+    for i, cost in zip(range(valuations.shape[0]), list(costs)): 
         # special case of budgeted matching: each edge from the same node on the left has the same cost
-        cost = random.uniform(0.01, 0.1) if budgeted else 0
         for j in range(valuations.shape[1]):
                 if valuations[i, j] > 0:
-                    G.add_edge(U[i], V[j], weight=valuations[i, j], cost=cost)
+                    G.add_edge(U[i], V[j], weight=valuations[i, j], cost=cost, density=valuations[i, j] / cost if budgeted else 0)
+                    print
       
-    print(G[U[0]][V[1]]['weight'])
 
-    
-    draw_bipartite_graph(G, U, V)
-    maximum_matching = nx.max_weight_matching(G)
-    print("value of the maximum matching: ", sum(G[u][v]['weight'] for u, v in maximum_matching))
 
     return G
 
@@ -93,31 +79,54 @@ def greedy_matching_bipartite(G,Budget):
     local_budgets = [0]*len(right)
     edges = sorted(G.edges(data=True), key=lambda edge: edge[2].get('density', 0), reverse=True)
     greedy_budgeted_matching = set()
+    bipartite_with_locals =  set()
     used = set()
     for u, v, attrs in edges:
         if u not in used:
             if v not in used:
                 # SOS check this condition
-                if attrs['cost'] + sum(local_budgets) <= Budget: 
+                if attrs['cost'] <= Budget: 
                     greedy_budgeted_matching.add((u, v))
+                    bipartite_with_locals.add((u, v))
                     used.update([u, v])
                     local_budgets[list(right).index(v)] = attrs['cost']
                     Budget -= attrs['cost']
             else:
-                if attrs['cost'] + local_budgets[list(right).index(v)] <= Budget:
-                    current = next(t for t in greedy_budgeted_matching if t[0] == u)
-                    if G[current[0]][current[1]]['weight'] < G[u][v]['weight']:
-                        greedy_budgeted_matching.remove(current)
-                        greedy_budgeted_matching.add((u, v))
-                        local_budgets[list(right).index(v)] = attrs['cost']
-                        Budget -= attrs['cost'] + G[current[0]][current[1]]['cost']
-    print("value of greedy budgeted matching: ",  sum(G[u][v]['weight'] for u, v in greedy_budgeted_matching))
+                # current is currently in matched in v
+                current = next((t for t in greedy_budgeted_matching if t[1] == v), None)
+                if (local_budgets[list(right).index(v)] >= attrs['cost']):
+                    bipartite_with_locals.add((u, v))
+
+                if (G[current[0]][current[1]]['weight'] < G[u][v]['weight']) and (attrs['cost'] <= Budget +  G[current[0]][current[1]]['cost']):
+                    greedy_budgeted_matching.remove(current)
+                    greedy_budgeted_matching.add((u, v))
+                    bipartite_with_locals.add((u, v))
+                    Budget = Budget - attrs['cost'] + G[current[0]][current[1]]['cost']
+                    local_budgets[list(right).index(v)] = attrs['cost']
+    # print("value of greedy budgeted matching: ",  sum(G[u][v]['weight'] for u, v in greedy_budgeted_matching))
+    # print("used budget: ", sum(local_budgets))
+
+    new_G = nx.Graph()
+    for u, v in bipartite_with_locals:
+        if G.has_edge(u, v):
+            # Get edge attributes from G
+            attr = G.get_edge_data(u, v)
+            # Add edge to H with attributes
+            new_G.add_edge(u, v, **attr)
+    
+
+    return greedy_budgeted_matching
 
 # Example
 num_txs = 10
-num_positions = 5
-custom_valuations = np.array([[101, 100], [100, 0]])
-G= create_bipartite_graph(valuations=custom_valuations, budgeted=False)
+num_positions = 3
 
-# G= create_bipartite_graph(valuations=generate_valuations(num_txs, num_positions, 0, 10))
-greedy_matching(G)
+dists = [stats.expon(scale=2.5), stats.lognorm(s=1, scale=np.exp(1)), stats.rayleigh(scale=1)]
+
+
+G = create_bipartite_graph(valuations=generate_valuations(dists[0], num_txs, num_positions), costs=np.random.uniform(low=5, high=25, size=num_txs), budgeted=True)
+greedy_matching_bipartite(G, Budget=50)
+
+
+
+
