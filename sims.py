@@ -7,47 +7,7 @@ import scipy.stats as stats
 import math
 import random
 
-from utils_simple_graphs import greedy_matching_simple, budgeted_bipartite_matching_solver
-
-
-def create_edge_list(valuations, costs):
-    """
-    Create a simple edge list representation for a bipartite graph with weights(values) and costs.
-
-    This is more efficient than NetworkX Graph for the greedy matching algorithm.
-    Each edge is represented as a tuple: (u, v, weight, cost, density)
-
-    Parameters:
-    -----------
-    valuations : numpy.ndarray
-        2D array of shape (n_left, n_right) containing edge values
-    costs : numpy.ndarray or list
-        1D array of length n_left containing costs for each left node
-        (all edges from the same left node have the same cost)
-
-    Returns:
-    --------
-    list of tuples
-        Each tuple is (u, v, weight, cost, density) where:
-        - u: left node identifier (e.g., "u1")
-        - v: right node identifier (e.g., "v1")
-        - weight: edge value
-        - cost: edge cost
-        - density: weight/cost ratio
-    """
-    edges = []
-    n_left, n_right = valuations.shape
-
-    for i, cost in enumerate(costs):
-        u = f"u{i+1}"
-        for j in range(n_right):
-            weight = valuations[i, j]
-            if weight > 0:
-                density = weight / cost
-                v = f"v{j+1}"
-                edges.append((u, v, weight, cost, density))
-
-    return edges
+from budgeted_bipartite_matching_algs import create_edge_list, greedy_matching_simple, budgeted_bipartite_matching_solver
 
 
 

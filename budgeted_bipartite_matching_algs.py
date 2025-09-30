@@ -7,18 +7,56 @@ from gurobipy import GRB
 import random
 
 
+def create_edge_list(valuations, costs):
+    """
+    Create a simple edge list representation for a bipartite graph with weights(values) and costs.
+
+    This is more efficient than NetworkX Graph for the greedy matching algorithm.
+    Each edge is represented as a tuple: (u, v, weight, cost, density)
+
+    Parameters:
+    -----------
+    valuations : numpy.ndarray
+        2D array of shape (n_left, n_right) containing edge values
+    costs : numpy.ndarray or list
+        1D array of length n_left containing costs for each left node
+        (all edges from the same left node have the same cost)
+
+    Returns:
+    --------
+    list of tuples
+        Each tuple is (u, v, weight, cost, density) where:
+        - u: left node identifier (e.g., "u1")
+        - v: right node identifier (e.g., "v1")
+        - weight: edge value
+        - cost: edge cost
+        - density: weight/cost ratio
+    """
+    edges = []
+    n_left, n_right = valuations.shape
+
+
+    for i, cost in enumerate(costs):
+        u = f"u{i+1}"
+        for j in range(n_right):
+            weight = valuations[i, j]
+            if weight >=0:
+                density = weight / cost
+                v = f"v{j+1}"
+                edges.append((u, v, weight, cost, density))
+
+    return edges
+
 
 def greedy_matching_simple(edges, Budget):
     """
     Greedy algorithm for budgeted bipartite matching with backtracking.
 
-    Uses simple edge list representation (no NetworkX) for maximum efficiency.
-
     Selects edges by density (value/cost ratio) in descending order, respecting:
     - Budget constraint: total cost of selected edges ≤ Budget
     - Matching constraint: each node matched at most once
     - Replacement rule: can replace a matched edge if new edge has higher value and fits budget
-    - Backtracking: when a left node is freed, reconsider previously skipped edges
+    - Backtracking: when a left node is replaced, reconsider previously skipped edges
 
     Parameters:
     -----------
@@ -36,11 +74,12 @@ def greedy_matching_simple(edges, Budget):
     # Sort edges by density (value/cost ratio) in descending order
     edges_sorted = sorted(edges, key=lambda e: e[4], reverse=True)  # e[4] is density
 
+
     # Build edge lookup dictionary for quick access to edge attributes
     edge_dict = {(e[0], e[1]): e for e in edges_sorted}
 
     matching = []
-    used_left = set()  # Left nodes already matched
+    used_left = set()  # Left nodes (agents) already matched
     matched_to_right = {}  # Maps right node v -> (u, weight, cost) currently matched
 
     # Build edge index map for backtracking
@@ -165,33 +204,33 @@ def budgeted_bipartite_matching_solver(edges, Budget):
         # print("No optimal solution found. Status code:", m.status)
         return None
 
+def run_solver_example():
+
+    U = [f"u{i}" for i in range(1, 51)]    # u1, u2, …, u50
+    V = [f"v{j}" for j in range(1, 11)]
+
+    # 2. Build a list of candidate edges with random weights/costs
+    #    Here we include all possible I×J edges; you can sparsify if you like.
+    random.seed(48)
+    edge_list = []
+    for u in U:
+        for v in V:
+            val  = random.uniform(1, 10)     # value in [1,10)
+            cst  = random.uniform(1, 5)      # cost in [1,5)
+            edge_list.append((u, v, {"value": val, "cost": cst}))
+
+    # 3. Convert to value and cost dicts
+    value = { (u,v): attrs["value"] for u, v, attrs in edge_list }
+    cost  = { (u,v): attrs["cost"]  for u, v, attrs in edge_list }
+
+    # 4. Set a budget
+    B = 0.3 * sum(cost.values())  # e.g. 30% of total possible cos
 
 
-U = [f"u{i}" for i in range(1, 51)]    # u1, u2, …, u50
-V = [f"v{j}" for j in range(1, 11)]
 
-# 2. Build a list of candidate edges with random weights/costs
-#    Here we include all possible I×J edges; you can sparsify if you like.
-random.seed(48)
-edge_list = []
-for u in U:
-    for v in V:
-        val  = random.uniform(1, 10)     # value in [1,10)
-        cst  = random.uniform(1, 5)      # cost in [1,5)
-        edge_list.append((u, v, {"value": val, "cost": cst}))
+    opt = budgeted_bipartite_matching_solver(U, V, value, cost, B)
 
-# 3. Convert to value and cost dicts
-value = { (u,v): attrs["value"] for u, v, attrs in edge_list }
-cost  = { (u,v): attrs["cost"]  for u, v, attrs in edge_list }
-
-# 4. Set a budget
-B = 0.3 * sum(cost.values())  # e.g. 30% of total possible cos
-
-
-
-opt = budgeted_bipartite_matching_solver(U, V, value, cost, B)
-
-print(f"Optimal value: {opt}")
+    print(f"Optimal value: {opt}")
 
 
 
