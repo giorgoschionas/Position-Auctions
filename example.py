@@ -23,6 +23,8 @@ costs = [0.001,   # u1: very cheap (density for v1 = 3/0.001 = 3000)
          1,
          0.999]   # u6: slightly cheaper (density = 1/0.999 ≈ 1.001)
 
+Budget = 4  # Total budget
+
 # Create edge list representation
 edges = create_edge_list(vals, costs)
 
@@ -33,7 +35,7 @@ for edge in edges:
 print()
 
 # Run greedy matching algorithm (sorts by density, uses backtracking for replacements)
-greedy_matching, greedy_total_value = greedy_matching(edges=edges, Budget=4)
+greedy_matching, greedy_total_value = greedy_matching(edges=edges, Budget=Budget)
 
 # Run optimal solver (Gurobi MIP)
 optimal_matching, optimal_total_value = budgeted_bipartite_matching_solver(edges=edges, Budget=4)
