@@ -2,8 +2,8 @@
 Visualization functions for budgeted bipartite matching simulations.
 
 This module contains all plotting functions for analyzing algorithm performance,
-including social welfare plots, approximation ratio analysis, and theoretical
-bound validation.
+including social welfare plots, approximation ratio, and theoretical
+bounds.
 """
 
 import numpy as np
@@ -11,8 +11,12 @@ import matplotlib.pyplot as plt
 import os
 
 
-# Create figures directory if it doesn't exist
-os.makedirs('figures', exist_ok=True)
+# Get the project root directory (parent of src/)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIGURES_DIR = os.path.join(PROJECT_ROOT, 'figures')
+
+# Create figures directory in project root if it doesn't exist
+os.makedirs(FIGURES_DIR, exist_ok=True)
 
 
 def plot_distribution_pdfs(dists, dist_labels, x_range=(0, 10), n_points=1000):
@@ -42,7 +46,7 @@ def plot_distribution_pdfs(dists, dist_labels, x_range=(0, 10), n_points=1000):
     plt.ylabel('Probability Density')
     plt.title('Probability Density Functions')
     plt.grid(True, alpha=0.3)
-    plt.savefig("figures/distributions.pdf", dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(FIGURES_DIR, "distributions.pdf"), dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -82,7 +86,7 @@ def plot_social_welfare(Bs, means, stds, opts, dist_labels, cost_dist_labels, co
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            plt.savefig(f"figures/SW-{label}-{cost_label}.pdf", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(FIGURES_DIR, f"SW-{label}-{cost_label}.pdf"), dpi=300, bbox_inches='tight')
             plt.show()
 
 
@@ -118,7 +122,7 @@ def plot_approximation_ratio(Bs, approxs_means, approxs_std, dist_labels, cost_d
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            plt.savefig(f"figures/Approx-{label}-{cost_label}.pdf", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(FIGURES_DIR, f"Approx-{label}-{cost_label}.pdf"), dpi=300, bbox_inches='tight')
             plt.show()
 
 
@@ -170,7 +174,7 @@ def plot_approximation_histogram(approxs, dist_labels, cost_dist_labels, theoret
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            plt.savefig(f"figures/Hist-Approx-{label}-{cost_label}.pdf", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(FIGURES_DIR, f"Hist-Approx-{label}-{cost_label}.pdf"), dpi=300, bbox_inches='tight')
             plt.show()
 
 
@@ -225,7 +229,7 @@ def plot_approximation_cdf(approxs, dist_labels, cost_dist_labels, theoretical_b
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            plt.savefig(f"figures/CDF-Approx-{label}-{cost_label}.pdf", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(FIGURES_DIR, f"CDF-Approx-{label}-{cost_label}.pdf"), dpi=300, bbox_inches='tight')
             plt.show()
 
 
@@ -286,7 +290,7 @@ def plot_ratio_vs_budget_normalized(approxs, Bs, costs_data, dist_labels, cost_d
             plt.legend()
             plt.grid(True, alpha=0.3)
 
-            plt.savefig(f"figures/Scatter-Ratio-Budget-{label}-{cost_label}.pdf", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(FIGURES_DIR, f"Scatter-Ratio-Budget-{label}-{cost_label}.pdf"), dpi=300, bbox_inches='tight')
             plt.show()
 
 

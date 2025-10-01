@@ -2,8 +2,7 @@
 Simulation environment for budgeted bipartite matching algorithms.
 
 This module runs simulations comparing greedy and optimal algorithms under
-various valuation and cost distributions, and generates comprehensive
-visualizations for theoretical analysis.
+various valuation and cost distributions, and generates visualizations for theoretical analysis.
 """
 
 import numpy as np
