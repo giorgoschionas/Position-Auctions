@@ -48,9 +48,9 @@ def create_edge_list(valuations, costs):
     return edges
 
 
-def greedy_matching_simple(edges, Budget):
+def greedy_matching(edges, Budget):
     """
-    Greedy algorithm for budgeted bipartite matching with backtracking.
+    Greedy algorithm for Budgeted Bipartite Matching with backtracking.
 
     Selects edges by density (value/cost ratio) in descending order, respecting:
     - Budget constraint: total cost of selected edges ≤ Budget
@@ -147,8 +147,11 @@ def budgeted_bipartite_matching_solver(edges, Budget):
 
     Returns:
     --------
-    float or None
-        Optimal objective value (total weight), or None if infeasible
+    tuple or None
+        (edges, total_value) where:
+        - edges: list of tuples (u, v) in the optimal matching
+        - total_value: optimal objective value (total weight)
+        Returns None if infeasible
     """
     # Extract unique left and right nodes
     U = set(e[0] for e in edges)
@@ -199,7 +202,7 @@ def budgeted_bipartite_matching_solver(edges, Budget):
         # print("Optimal matching:", sol)
         # print("Total value:", m.ObjVal)
         # print("Total cost:", sum(cost[i,j] for (i,j) in sol))
-        return m.ObjVal
+        return sol, m.ObjVal
     else:
         # print("No optimal solution found. Status code:", m.status)
         return None

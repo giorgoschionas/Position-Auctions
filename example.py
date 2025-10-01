@@ -1,4 +1,4 @@
-from budgeted_bipartite_matching_algs import create_edge_list, budgeted_bipartite_matching_solver, greedy_matching_simple
+from budgeted_bipartite_matching_algs import create_edge_list, budgeted_bipartite_matching_solver, greedy_matching
 import numpy as np
 
 # Example: Budgeted Bipartite Matching
@@ -33,10 +33,10 @@ for edge in edges:
 print()
 
 # Run greedy matching algorithm (sorts by density, uses backtracking for replacements)
-greedy_matching, greedy_total_value = greedy_matching_simple(edges=edges, Budget=4)
+greedy_matching, greedy_total_value = greedy_matching(edges=edges, Budget=4)
 
 # Run optimal solver (Gurobi MIP)
-optimal_total_value = budgeted_bipartite_matching_solver(edges=edges, Budget=4)
+optimal_matching, optimal_total_value = budgeted_bipartite_matching_solver(edges=edges, Budget=4)
 
 # Display results
 print("\n" + "="*60)
@@ -47,4 +47,7 @@ print(f"Greedy matching edges:")
 for edge in greedy_matching:
     print(f"  {edge}")
 print(f"\nOptimal matching total value: {optimal_total_value}")
+print(f"Optimal matching edges:")
+for edge in optimal_matching:
+    print(f"  {edge}")
 print(f"Approximation ratio (OPT/GREEDY): {optimal_total_value/greedy_total_value if greedy_total_value > 0 else 'N/A'}")
