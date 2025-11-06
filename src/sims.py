@@ -61,9 +61,16 @@ def simulate_block(dist, tx_size_dists, N, num_positions, B, T):
     max_costs = np.zeros(T)
     max_approx = 0
 
+    ctrs = np.abs(np.random.normal(loc=1.0, scale=0.2, size=(N, num_positions)))
+
+
     for t in range(T):
         # Generate random instance
-        valuations = dist.rvs(size=(N, num_positions))
+
+        bids = dist.rvs(N)
+        valuations = ctrs * bids.reshape(-1, 1)
+
+
         costs = tx_size_dists.rvs(N)
         max_cost = np.max(costs)
         max_costs[t] = max_cost
